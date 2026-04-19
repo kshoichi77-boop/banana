@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="高校生が課題提出期限を確認するための個人用カレンダーです。">
+  <meta name="theme-color" content="#ffffff">
+  <title>課題提出期限カレンダー</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-copy">
+        <p class="eyebrow">課題提出期限カレンダー</p>
+        <h1>提出期限を見落とさないためのカレンダー</h1>
+        <p class="lead">未提出・今日締切・期限切れをすぐ確認できます。データはこのブラウザに保存されます。</p>
+      </div>
+      <div class="header-status" aria-label="今日の日付">
+        <p class="today-pill" id="todayDateText">今日の日付を読み込み中</p>
+        <button class="button button-secondary" type="button" id="goTodayButton">今日へ</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="summary-grid" aria-label="課題の概要">
+        <article class="summary-card">
+          <span class="summary-label">未提出</span>
+          <strong class="summary-value" id="summaryPending">0</strong>
+          <span class="summary-help">残っている課題</span>
+        </article>
+        <article class="summary-card summary-card--today">
+          <span class="summary-label">今日締切</span>
+          <strong class="summary-value" id="summaryToday">0</strong>
+          <span class="summary-help">今日中に確認</span>
+        </article>
+        <article class="summary-card summary-card--soon">
+          <span class="summary-label">3日以内</span>
+          <strong class="summary-value" id="summarySoon">0</strong>
+          <span class="summary-help">明日から3日以内</span>
+        </article>
+        <article class="summary-card summary-card--overdue">
+          <span class="summary-label">期限切れ</span>
+          <strong class="summary-value" id="summaryOverdue">0</strong>
+          <span class="summary-help">すぐ対応</span>
+        </article>
+      </section>
+
+      <section class="panel toolbar-panel" aria-labelledby="filterTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">表示切り替え</p>
+            <h2 id="filterTitle">課題フィルタ</h2>
+          </div>
+          <p class="section-help">カレンダー、選択日の詳細、直近締切一覧に反映されます。</p>
+        </div>
+        <div class="filter-tabs" id="filterTabs" aria-label="課題表示フィルタ">
+          <button class="filter-button is-active" type="button" data-filter="all" aria-pressed="true">すべて</button>
+          <button class="filter-button" type="button" data-filter="pending" aria-pressed="false">未提出</button>
+          <button class="filter-button" type="button" data-filter="today" aria-pressed="false">今日締切</button>
+          <button class="filter-button" type="button" data-filter="soon" aria-pressed="false">3日以内</button>
+          <button class="filter-button" type="button" data-filter="overdue" aria-pressed="false">期限切れ</button>
+          <button class="filter-button" type="button" data-filter="done" aria-pressed="false">提出済み</button>
+        </div>
+      </section>
+
+      <section class="content-grid" aria-label="提出期限の確認エリア">
+        <section class="panel calendar-panel" aria-labelledby="calendarTitle">
+          <div class="section-heading calendar-heading">
+            <div>
+              <p class="eyebrow">月カレンダー</p>
+              <h2 id="calendarTitle">締切の危険度を確認</h2>
+            </div>
+            <div class="month-controls" aria-label="月の切り替え">
+              <button class="button button-secondary" type="button" id="prevMonthButton">前月</button>
+              <strong class="current-month" id="currentMonthText">----</strong>
+              <button class="button button-secondary" type="button" id="nextMonthButton">次月</button>
+            </div>
+          </div>
+
+          <div class="risk-legend" aria-label="危険度の凡例">
+            <span><i class="legend-dot legend-dot--overdue"></i>期限切れ</span>
+            <span><i class="legend-dot legend-dot--today"></i>今日</span>
+            <span><i class="legend-dot legend-dot--soon"></i>3日以内</span>
+            <span><i class="legend-dot legend-dot--done"></i>提出済みのみ</span>
+          </div>
+
+          <div class="calendar-board">
+            <div class="calendar-weekdays" aria-hidden="true">
+              <span>日</span>
+              <span>月</span>
+              <span>火</span>
+              <span>水</span>
+              <span>木</span>
+              <span>金</span>
+              <span>土</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid" aria-label="月表示カレンダー"></div>
+          </div>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel side-panel" aria-labelledby="selectedDateTitle">
+            <div class="section-heading compact-heading">
+              <div>
+                <p class="eyebrow">選択日</p>
+                <h2 id="selectedDateTitle">選択日の課題</h2>
+                <p class="section-help" id="selectedDateSubtitle">日付を選択してください。</p>
+              </div>
+            </div>
+            <div class="task-list" id="selectedDateTasks" aria-live="polite"></div>
+          </section>
+
+          <section class="panel side-panel" aria-labelledby="deadlineTitle">
+            <div class="section-heading compact-heading">
+              <div>
+                <p class="eyebrow">直近締切</p>
+                <h2 id="deadlineTitle">見落としたくない課題</h2>
+                <p class="section-help" id="deadlineSubtitle">未提出の課題を期限順に表示します。</p>
+              </div>
+            </div>
+            <div class="task-list" id="deadlineList" aria-live="polite"></div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="panel form-panel" id="taskFormPanel" aria-labelledby="taskFormTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">追加・編集</p>
+            <h2 id="taskFormTitle">課題を登録する</h2>
+            <p class="edit-state-text" id="editStateText">課題名と提出期限を入力してください。</p>
+          </div>
+          <button class="button button-secondary hidden" type="button" id="cancelEditButton">編集をキャンセル</button>
+        </div>
+
+        <form id="taskForm" novalidate>
+          <input type="hidden" id="taskId">
+
+          <div class="form-grid">
+            <label class="form-field">
+              <span>教科</span>
+              <select id="taskSubject" required>
+                <option value="国語">国語</option>
+                <option value="数学">数学</option>
+                <option value="英語">英語</option>
+                <option value="理科">理科</option>
+                <option value="社会">社会</option>
+                <option value="情報">情報</option>
+                <option value="その他">その他</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>課題名 <em>必須</em></span>
+              <input type="text" id="taskTitle" placeholder="例: 英単語プリント提出" maxlength="80" required>
+            </label>
+
+            <label class="form-field">
+              <span>提出期限 <em>必須</em></span>
+              <input type="date" id="taskDueDate" required>
+            </label>
+
+            <label class="form-field">
+              <span>提出状況</span>
+              <select id="taskStatus" required>
+                <option value="pending">未提出</option>
+                <option value="done">提出済み</option>
+              </select>
+            </label>
+
+            <label class="form-field form-field--wide">
+              <span>メモ</span>
+              <textarea id="taskMemo" rows="3" placeholder="例: Lesson 3-4、ノート提出あり" maxlength="300"></textarea>
+            </label>
+          </div>
+
+          <p class="form-error" id="taskFormError" role="alert"></p>
+          <div class="form-actions">
+            <button class="button button-primary" type="submit" id="taskSubmitButton">課題を追加</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel backup-panel" aria-labelledby="dataTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">バックアップ</p>
+            <h2 id="dataTitle">データ管理</h2>
+          </div>
+          <p class="section-help">JSONで保存しておくと、別のブラウザへ移すときにも使えます。</p>
+        </div>
+
+        <div class="data-actions">
+          <button class="button button-secondary" type="button" id="exportButton">JSONエクスポート</button>
+          <label class="button button-secondary file-button">
+            JSONインポート
+            <input type="file" id="importFileInput" accept="application/json,.json">
+          </label>
+          <button class="button button-danger" type="button" id="clearDataButton">全データ削除</button>
+        </div>
+        <p class="data-message" id="dataMessage" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>このアプリは静的ファイルだけで動きます。</span>
+      <span>保存先はブラウザのlocalStorageです。</span>
+    </footer>
+  </div>
+</body>
+</html>
